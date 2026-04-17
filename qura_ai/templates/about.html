@@ -1,0 +1,62 @@
+ {% extends "base.html" %}
+{% block title %}About QURA AI{% endblock %}
+{% block extra_head %}
+<style>
+    .about-container {
+        max-width: 800px;
+        margin: 40px auto;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(12px);
+        border-radius: 32px;
+        padding: 40px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    h1 {
+        font-size: 48px;
+        background: linear-gradient(135deg, #38bdf8, #c084fc);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    .founder {
+        margin-top: 30px;
+        font-size: 20px;
+        color: #c084fc;
+    }
+    .description {
+        margin-top: 20px;
+        line-height: 1.7;
+        color: #cbd5e1;
+    }
+    .signature {
+        margin-top: 40px;
+        font-style: italic;
+        border-top: 1px solid #334155;
+        padding-top: 20px;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="about-container">
+    <h1>⚡ QURA AI</h1>
+    <div class="founder">Created by <strong>YADAV ARYAN</strong></div>
+    <div class="description">
+        QURA AI is a next‑generation artificial intelligence assistant designed to understand, speak, and generate code in multiple languages.  
+        With a futuristic neural interface, real‑time web search capabilities, and a human‑like conversational avatar, QURA pushes the boundaries of human‑AI interaction.
+    </div>
+    <div class="description">
+        This project showcases advanced features:  
+        🧠 Multi‑language support (English, Spanish, French, German, Hindi, Chinese)  
+        🎤 Voice input & text‑to‑speech  
+        💻 Code generation with syntax highlighting  
+        🌐 Web search integration (coming soon)  
+        🤖 3D animated robot interface  
+        📜 Persistent conversation history  
+    </div>
+    <div class="signature">
+        “Building the bridge between human curiosity and machine intelligence.”<br>
+        — YADAV ARYAN, Founder & Creator
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}QURA AI – Home{% endblock %}
+{% block extra_head %}
+<style>
+    .hero {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 80vh;
+        gap: 60px;
+        flex-wrap: wrap;
+        padding: 40px;
+    }
+    .canvas-container {
+        flex: 1;
+        min-width: 400px;
+        display: flex;
+        justify-content: center;
+    }
+    canvas {
+        width: 100%;
+        max-width: 600px;
+        border-radius: 32px;
+        box-shadow: 0 0 40px rgba(79,70,229,0.3);
+    }
+    .hero-text {
+        flex: 1;
+        text-align: left;
+        min-width: 300px;
+    }
+    .hero-text h1 {
+        font-size: 72px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #38bdf8, #c084fc, #f472b6);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-shadow: 0 0 20px rgba(192,132,252,0.5);
+        animation: glowPulse 3s infinite alternate;
+    }
+    @keyframes glowPulse {
+        0% { text-shadow: 0 0 10px rgba(56,189,248,0.3); }
+        100% { text-shadow: 0 0 30px rgba(192,132,252,0.8); }
+    }
+    .hero-text p {
+        font-size: 18px;
+        margin-top: 20px;
+        color: #94a3b8;
+        line-height: 1.6;
+    }
+    .cta-button {
+        display: inline-block;
+        margin-top: 32px;
+        background: linear-gradient(95deg, #4f46e5, #c026d3);
+        padding: 12px 32px;
+        border-radius: 40px;
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+    .cta-button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px #c084fc;
+    }
+    @media (max-width: 800px) {
+        .hero { flex-direction: column; text-align: center; }
+        .hero-text { text-align: center; }
+        .hero-text h1 { font-size: 48px; }
+        .canvas-container { min-width: 300px; }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="hero">
+    <div class="canvas-container">
+        <canvas id="brainCanvas" width="600" height="600"></canvas>
+    </div>
+    <div class="hero-text">
+        <h1>QURA AI</h1>
+        <p>Neural interface · Next‑gen intelligence · Conscious machine</p>
+        <a href="/chat" class="cta-button">Start Chatting →</a>
+    </div>
+</div>
+<script>
+    const canvas = document.getElementById('brainCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = 600, height = 600;
+    canvas.width = width; canvas.height = height;
+
+    // Neural network nodes
+    let nodes = [];
+    const numNodes = 45;
+    for (let i = 0; i < numNodes; i++) {
+        nodes.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            radius: 3 + Math.random() * 6,
+            pulse: Math.random() * Math.PI * 2,
+            speed: 0.02 + Math.random() * 0.03,
+            color: `hsl(${260 + Math.random() * 60}, 80%, 60%)`
+        });
+    }
+
+    // Connections based on distance
+    function drawConnections() {
+        for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+                const dx = nodes[i].x - nodes[j].x;
+                const dy = nodes[i].y - nodes[j].y;
+                const dist = Math.hypot(dx, dy);
+                if (dist < 120) {
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[i].x, nodes[i].y);
+                    ctx.lineTo(nodes[j].x, nodes[j].y);
+                    const opacity = (1 - dist / 120) * 0.4;
+                    ctx.strokeStyle = `rgba(168, 85, 247, ${opacity})`;
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
+    function drawNodes() {
+        for (let node of nodes) {
+            // Pulse effect
+            const pulseRadius = node.radius + Math.sin(node.pulse) * 2;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, pulseRadius, 0, Math.PI * 2);
+            ctx.fillStyle = node.color;
+            ctx.fill();
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = node.color;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, pulseRadius * 0.5, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            node.pulse += node.speed;
+        }
+    }
+
+    // Draw side-profile silhouette
+    function drawHeadSilhouette() {
+        ctx.save();
+        ctx.shadowBlur = 0;
+        // Transparent skull effect – draw a gradient overlay
+        ctx.beginPath();
+        // Profile shape (facing left)
+        ctx.moveTo(200, 100);
+        ctx.bezierCurveTo(150, 100, 120, 150, 120, 220);
+        ctx.lineTo(120, 300);
+        ctx.bezierCurveTo(120, 360, 140, 400, 180, 440);
+        ctx.lineTo(180, 500);
+        ctx.lineTo(420, 500);
+        ctx.lineTo(420, 440);
+        ctx.bezierCurveTo(460, 400, 480, 360, 480, 300);
+        ctx.lineTo(480, 220);
+        ctx.bezierCurveTo(480, 150, 450, 100, 400, 100);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(20, 30, 55, 0.6)';
+        ctx.fill();
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Inner glow (brain area)
+        ctx.beginPath();
+        ctx.ellipse(300, 300, 150, 180, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fill();
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+        drawHeadSilhouette();
+        drawConnections();
+        drawNodes();
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Additional particle trail for energy pulses (optional)
+    setInterval(() => {
+        // Randomly add a traveling pulse
+        const startNode = nodes[Math.floor(Math.random() * nodes.length)];
+        const endNode = nodes[Math.floor(Math.random() * nodes.length)];
+        // Not implemented for simplicity, but canvas already looks dynamic
+    }, 500);
+</script>
+{% endblock %}

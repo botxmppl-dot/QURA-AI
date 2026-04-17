@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QURA AI | Next‑Gen Intelligence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Poppins', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            background: radial-gradient(circle at 20% 30%, #0a0f2a, #050814);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .particle {
+            position: absolute;
+            background: rgba(102, 126, 234, 0.4);
+            border-radius: 50%;
+            animation: float 12s infinite ease-in-out;
+            filter: blur(2px);
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Main container */
+        .app {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            height: 100vh;
+            backdrop-filter: blur(2px);
+        }
+
+        /* Sidebar - glassmorphism */
+        .sidebar {
+            width: 280px;
+            background: rgba(15, 25, 45, 0.7);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding: 28px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            box-shadow: 8px 0 32px rgba(0,0,0,0.2);
+        }
+
+        .logo-area {
+            text-align: center;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a78bfa, #f472b6, #38bdf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: logoGlow 3s infinite alternate;
+        }
+        @keyframes logoGlow {
+            0% { text-shadow: 0 0 5px rgba(167,139,250,0.3); }
+            100% { text-shadow: 0 0 20px rgba(244,114,182,0.6); }
+        }
+        .company {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        .new-chat-btn {
+            background: linear-gradient(95deg, #7c3aed, #c026d3);
+            border: none;
+            padding: 12px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(124,58,237,0.3);
+        }
+        .new-chat-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(124,58,237,0.5);
+        }
+
+        .model-selector, .search-toggle {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            color: #e2e8f0;
+        }
+        .model-selector select {
+            padding: 10px;
+            border-radius: 28px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #4c1d95;
+            color: white;
+            font-weight: 500;
+        }
+
+        /* Toggle switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 26px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #334155;
+            border-radius: 34px;
+            transition: 0.3s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        input:checked + .slider {
+            background: linear-gradient(95deg, #7c3aed, #c026d3);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Chat area */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 3D Robot Avatar */
+        .avatar-container {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(8px);
+            padding: 16px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .robot {
+            display: inline-block;
+            position: relative;
+            width: 140px;
+            height: 140px;
+            animation: floatRobot 3s ease-in-out infinite;
+        }
+        @keyframes floatRobot {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+        .robot-head {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(145deg, #2d2f5e, #1a1c3a);
+            border-radius: 50%;
+            margin: 0 auto;
+            position: relative;
+            box-shadow: 0 0 0 4px #4f46e5, 0 0 0 8px rgba(79,70,229,0.3);
+            animation: headGlow 2s infinite alternate;
+        }
+        @keyframes headGlow {
+            0% { box-shadow: 0 0 0 4px #4f46e5, 0 0 0 8px rgba(79,70,229,0.2); }
+            100% { box-shadow: 0 0 0 6px #a78bfa, 0 0 0 14px rgba(167,139,250,0.5); }
+        }
+        .eyes {
+            display: flex;
+            gap: 28px;
+            justify-content: center;
+            padding-top: 32px;
+        }
+        .eye {
+            width: 20px;
+            height: 20px;
+            background: #facc15;
+            border-radius: 50%;
+            position: relative;
+            animation: blink 4s infinite;
+            box-shadow: 0 0 8px #facc15;
+        }
+        .eye::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+            top: 6px;
+            left: 6px;
+            transition: 0.1s;
+        }
+        @keyframes blink {
+            0%, 90%, 100% { transform: scaleY(1); }
+            95% { transform: scaleY(0.1); }
+        }
+        .mouth {
+            width: 36px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 20px;
+            margin: 20px auto 0;
+            transition: all 0.08s linear;
+            box-shadow: 0 0 6px #ef4444;
+        }
+        .mouth.talking {
+            height: 18px;
+            border-radius: 10px;
+            background: #f97316;
+        }
+        .ear {
+            position: absolute;
+            width: 20px;
+            height: 30px;
+            background: #4f46e5;
+            top: 35px;
+            border-radius: 40%;
+        }
+        .ear.left { left: -12px; transform: rotate(-15deg); }
+        .ear.right { right: -12px; transform: rotate(15deg); }
+        .antenna {
+            position: absolute;
+            width: 6px;
+            height: 25px;
+            background: #a78bfa;
+            top: -20px;
+            left: 47px;
+            border-radius: 10px;
+        }
+        .antenna::after {
+            content: '⚡';
+            position: absolute;
+            top: -18px;
+            left: -8px;
+            font-size: 16px;
+            animation: spark 1s infinite;
+        }
+        @keyframes spark {
+            0% { opacity: 0.3; transform: scale(0.8);}
+            100% { opacity: 1; transform: scale(1.2);}
+        }
+        .avatar-status {
+            margin-top: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            background: rgba(0,0,0,0.6);
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 40px;
+            color: #c4b5fd;
+            letter-spacing: 1px;
+        }
+
+        /* Messages */
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 28px;
+            scroll-behavior: smooth;
+        }
+        .welcome-card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 32px;
+            padding: 40px;
+            text-align: center;
+            max-width: 550px;
+            margin: 40px auto;
+            color: white;
+        }
+        .example-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+        .example-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 40px;
+            color: #e2e8f0;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .example-btn:hover {
+            background: #7c3aed;
+            transform: scale(1.02);
+        }
+        .message {
+            max-width: 800px;
+            margin: 20px auto;
+            display: flex;
+            gap: 14px;
+        }
+        .message.user {
+            flex-direction: row-reverse;
+        }
+        .bubble {
+            max-width: 70%;
+            padding: 14px 20px;
+            border-radius: 28px;
+            font-size: 15px;
+            line-height: 1.5;
+            backdrop-filter: blur(8px);
+        }
+        .message.user .bubble {
+            background: linear-gradient(125deg, #7c3aed, #c026d3);
+            color: white;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+        }
+        .message.assistant .bubble {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #f1f5f9;
+        }
+        .citations {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        .citations a {
+            color: #a78bfa;
+            text-decoration: none;
+        }
+
+        /* Input */
+        .input-panel {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(12px);
+            padding: 18px 24px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .input-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            gap: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 60px;
+            padding: 8px 20px;
+            border: 1px solid #4c1d95;
+        }
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 15px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+        }
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 26px;
+            cursor: pointer;
+            transition: 0.1s;
+            padding: 6px;
+            border-radius: 50%;
+            color: #c4b5fd;
+        }
+        .icon-btn:hover {
+            background: #7c3aed;
+            color: white;
+        }
+        .input-hint {
+            text-align: center;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #7c3aed;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+<div class="app">
+    <aside class="sidebar">
+        <div class="logo-area">
+            <div class="logo">⚡ QURA AI</div>
+            <div class="company">NEXT-GEN INTELLIGENCE</div>
+        </div>
+        <button class="new-chat-btn" id="newChatBtn">⟳ New Conversation</button>
+        <div class="model-selector">
+            <label>🧠 Model</label>
+            <select id="modelSelect">
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Fast)</option>
+                <option value="gpt-4">GPT-4 (Powerful)</option>
+            </select>
+        </div>
+        <div class="search-toggle">
+            <label class="switch">
+                <input type="checkbox" id="webSearchToggle" checked>
+                <span class="slider"></span>
+            </label>
+            <span>🌐 Web Search</span>
+        </div>
+    </aside>
+
+    <main class="chat-main">
+        <div class="avatar-container">
+            <div class="robot" id="robotAvatar">
+                <div class="robot-head">
+                    <div class="ear left"></div>
+                    <div class="ear right"></div>
+                    <div class="antenna"></div>
+                    <div class="eyes">
+                        <div class="eye"></div>
+                        <div class="eye"></div>
+                    </div>
+                    <div class="mouth" id="robotMouth"></div>
+                </div>
+            </div>
+            <div class="avatar-status" id="avatarStatus">🟢 ONLINE • READY</div>
+        </div>
+
+        <div class="messages-container" id="messagesContainer">
+            <div class="welcome-card" id="welcomeCard">
+                <h2>🤖 Hello, I'm QURA</h2>
+                <p>Your intelligent companion. I see, hear, and speak.<br>Ask me anything – science, news, creative writing.</p>
+                <div class="example-questions">
+                    <button class="example-btn">Explain quantum computing</button>
+                    <button class="example-btn">Latest AI breakthroughs</button>
+                    <button class="example-btn">Write a haiku about stars</button>
+                </div>
+            </div>
+            <div id="chatMessages"></div>
+        </div>
+
+        <div class="input-panel">
+            <div class="input-wrapper">
+                <textarea id="userInput" placeholder="Type your message... (Enter to send)" rows="1"></textarea>
+                <button id="voiceBtn" class="icon-btn" title="Voice input">🎙️</button>
+                <button id="sendBtn" class="icon-btn" title="Send">✈️</button>
+            </div>
+            <div class="input-hint">↵ Enter to send · Shift+Enter for new line</div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Particles generation
+    function createParticles() {
+        const container = document.getElementById('particles');
+        for (let i = 0; i < 80; i++) {
+            const p = document.createElement('div');
+            p.classList.add('particle');
+            const size = Math.random() * 6 + 2;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDelay = Math.random() * 15 + 's';
+            p.style.animationDuration = 8 + Math.random() * 12 + 's';
+            p.style.background = `rgba(${100 + Math.random() * 155}, ${100 + Math.random() * 155}, 255, 0.4)`;
+            container.appendChild(p);
+        }
+    }
+    createParticles();
+
+    // DOM Elements
+    const chatMessages = document.getElementById('chatMessages');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const modelSelect = document.getElementById('modelSelect');
+    const webSearchToggle = document.getElementById('webSearchToggle');
+    const welcomeCard = document.getElementById('welcomeCard');
+    const robotMouth = document.getElementById('robotMouth');
+    const avatarStatus = document.getElementById('avatarStatus');
+
+    let isWaiting = false;
+    let recognition = null;
+    let synth = window.speechSynthesis;
+    let currentUtterance = null;
+
+    // Speech recognition
+    if ('webkitSpeechRecognition' in window) {
+        const SpeechRecognition = window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+    }
+
+    voiceBtn.onclick = () => {
+        if (!recognition) {
+            avatarStatus.innerText = '❌ Speech not supported';
+            setTimeout(() => avatarStatus.innerText = '🟢 ONLINE • READY', 1500);
+            return;
+        }
+        recognition.start();
+        avatarStatus.innerText = '🎤 Listening... speak now';
+        recognition.onresult = (event) => {
+            const spoken = event.results[0][0].transcript;
+            userInput.value = spoken;
+            avatarStatus.innerText = '✅ Heard you!';
+            sendMessage();
+        };
+        recognition.onerror = () => {
+            avatarStatus.innerText = '🔁 Try again';
+            setTimeout(() => avatarStatus.innerText = '🟢 ONLINE • READY', 1000);
+        };
+    };
+
+    async function sendMessage() {
+        const msg = userInput.value.trim();
+        if (!msg || isWaiting) return;
+
+        userInput.value = '';
+        userInput.style.height = 'auto';
+        isWaiting = true;
+        avatarStatus.innerText = '🤔 Thinking...';
+
+        if (welcomeCard) welcomeCard.remove();
+
+        addMessage(msg, 'user');
+
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message assistant';
+        typingDiv.innerHTML = `<div class="bubble"><i>⚡ QURA is processing...</i></div>`;
+        chatMessages.appendChild(typingDiv);
+        typingDiv.scrollIntoView({ behavior: 'smooth' });
+
+        const model = modelSelect.value;
+        const enableSearch = webSearchToggle.checked;
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg, model, enable_search: enableSearch })
+            });
+            const data = await res.json();
+            typingDiv.remove();
+
+            if (data.error) {
+                addMessage(`⚠️ ${data.error}`, 'assistant');
+                avatarStatus.innerText = '⚠️ Error';
+            } else {
+                addMessage(data.response, 'assistant', data.citations);
+                speakWithRobot(data.response);
+                avatarStatus.innerText = '🟢 ONLINE • READY';
+            }
+        } catch (err) {
+            typingDiv.remove();
+            addMessage(`🔌 Connection error: ${err.message}`, 'assistant');
+            avatarStatus.innerText = '🔌 Offline';
+        } finally {
+            isWaiting = false;
+        }
+    }
+
+    function addMessage(text, role, citations = null) {
+        const div = document.createElement('div');
+        div.className = `message ${role}`;
+        const bubble = document.createElement('div');
+        bubble.className = 'bubble';
+        let formatted = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        bubble.innerHTML = formatted;
+        div.appendChild(bubble);
+        if (citations && citations.length) {
+            const citeDiv = document.createElement('div');
+            citeDiv.className = 'citations';
+            citeDiv.innerHTML = '📚 Sources: ' + citations.map(c => `<a href="${c.url}" target="_blank">${c.title.substring(0, 45)}</a>`).join(' · ');
+            div.appendChild(citeDiv);
+        }
+        chatMessages.appendChild(div);
+        div.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function speakWithRobot(text) {
+        if (!synth) return;
+        if (currentUtterance) synth.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+        utterance.onstart = () => {
+            avatarStatus.innerText = '🔊 Speaking...';
+            const interval = setInterval(() => {
+                if (!synth.speaking) {
+                    clearInterval(interval);
+                    robotMouth.classList.remove('talking');
+                    if (avatarStatus.innerText === '🔊 Speaking...') avatarStatus.innerText = '🟢 ONLINE • READY';
+                    return;
+                }
+                robotMouth.classList.add('talking');
+                setTimeout(() => robotMouth.classList.remove('talking'), 150);
+            }, 180);
+        };
+        utterance.onend = () => {
+            robotMouth.classList.remove('talking');
+            if (avatarStatus.innerText === '🔊 Speaking...') avatarStatus.innerText = '🟢 ONLINE • READY';
+        };
+        currentUtterance = utterance;
+        synth.speak(utterance);
+    }
+
+    newChatBtn.onclick = () => {
+        chatMessages.innerHTML = '';
+        const newWelcome = document.createElement('div');
+        newWelcome.className = 'welcome-card';
+        newWelcome.id = 'welcomeCard';
+        newWelcome.innerHTML = `
+            <h2>🤖 Hello, I'm QURA</h2>
+            <p>Your intelligent companion. I see, hear, and speak.<br>Ask me anything – science, news, creative writing.</p>
+            <div class="example-questions">
+                <button class="example-btn">Explain quantum computing</button>
+                <button class="example-btn">Latest AI breakthroughs</button>
+                <button class="example-btn">Write a haiku about stars</button>
+            </div>
+        `;
+        document.getElementById('messagesContainer').prepend(newWelcome);
+        document.querySelectorAll('.example-btn').forEach(btn => {
+            btn.onclick = () => { userInput.value = btn.innerText; sendMessage(); };
+        });
+        avatarStatus.innerText = '🟢 ONLINE • READY';
+    };
+
+    userInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+    sendBtn.onclick = sendMessage;
+
+    document.querySelectorAll('.example-btn').forEach(btn => {
+        btn.onclick = () => { userInput.value = btn.innerText; sendMessage(); };
+    });
+
+    // Extra: rotate robot on idle? Already floating via CSS.
+</script>
+</body>
+</html>

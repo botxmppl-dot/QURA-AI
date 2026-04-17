@@ -1,0 +1,143 @@
+ {% extends "base.html" %}
+{% block title %}QURA AI – Chat{% endblock %}
+{% block extra_head %}
+<style>
+    * { box-sizing: border-box; }
+    .chat-layout { display: flex; gap: 24px; max-width: 1400px; margin: 0 auto; padding: 20px; height: calc(100vh - 100px); }
+    .chat-sidebar { width: 280px; background: rgba(15,23,42,0.7); backdrop-filter: blur(16px); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 16px; overflow-y: auto; flex-shrink: 0; }
+    .chat-sidebar button, .chat-sidebar select { width: 100%; padding: 10px; border-radius: 40px; background: #1e293b; border: 1px solid #4f46e5; color: white; font-weight: 500; cursor: pointer; }
+    .new-chat-btn { background: linear-gradient(95deg, #4f46e5, #c026d3) !important; border: none !important; }
+    .history-list { margin-top: 8px; border-top: 1px solid #334155; padding-top: 12px; }
+    .history-item { padding: 10px 12px; border-radius: 12px; cursor: pointer; margin-bottom: 6px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; transition: 0.1s; }
+    .history-item:hover { background: #4f46e5; }
+    .history-item.active { background: #4f46e5; }
+    .delete-chat { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 14px; padding: 0 4px; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: 0.1s; }
+    .history-item:hover .delete-chat { opacity: 1; }
+    .delete-chat:hover { background: #ef4444; color: white; }
+    .chat-main-area { flex: 1; background: rgba(0,0,0,0.3); backdrop-filter: blur(8px); border-radius: 24px; padding: 24px; display: flex; flex-direction: column; overflow: hidden; }
+    .robot-container { display: flex; justify-content: center; margin-bottom: 16px; }
+    .robot-avatar { width: 80px; height: 80px; background: linear-gradient(135deg, #4f46e5, #c026d3); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 0 20px rgba(79,70,229,0.5); }
+    .robot-avatar.listening { animation: listenPulse 1s infinite; }
+    .robot-avatar.speaking { animation: speakPulse 0.5s infinite; }
+    @keyframes listenPulse { 0% { transform: scale(1); box-shadow: 0 0 20px #4f46e5; } 50% { transform: scale(1.1); box-shadow: 0 0 40px #c084fc; } 100% { transform: scale(1); box-shadow: 0 0 20px #4f46e5; } }
+    @keyframes speakPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    .robot-face { font-size: 42px; }
+    .robot-status { text-align: center; font-size: 12px; margin-top: 8px; color: #c084fc; font-weight: 500; }
+    .messages-area { flex: 1; overflow-y: auto; padding-right: 10px; margin: 16px 0; }
+    .message { margin-bottom: 24px; display: flex; align-items: flex-start; gap: 12px; }
+    .message.user { justify-content: flex-end; }
+    .bubble { max-width: 80%; padding: 12px 20px; border-radius: 28px; font-size: 15px; line-height: 1.6; word-wrap: break-word; }
+    .message.user .bubble { background: linear-gradient(125deg, #4f46e5, #c026d3); color: white; }
+    .message.assistant .bubble { background: rgba(30,41,59,0.9); border: 1px solid #4f46e5; color: #e2e8f0; }
+    .code-block-wrapper { position: relative; margin: 12px 0; border-radius: 16px; overflow: hidden; }
+    .code-header { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 8px 12px; border-bottom: 1px solid #334155; font-size: 12px; color: #94a3b8; }
+    .code-actions { display: flex; gap: 8px; }
+    .code-actions button { background: #1e293b; border: none; padding: 4px 10px; border-radius: 6px; color: #c084fc; cursor: pointer; font-size: 11px; }
+    .code-actions button:hover { background: #4f46e5; color: white; }
+    pre { margin: 0; padding: 16px; background: #0f172a; overflow-x: auto; font-family: monospace; font-size: 13px; line-height: 1.5; white-space: pre; tab-size: 4; }
+    .speak-btn { background: rgba(79,70,229,0.3); border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+    .speak-btn:hover { background: #4f46e5; transform: scale(1.05); }
+    .input-wrapper { display: flex; gap: 12px; background: #1e293b; border-radius: 60px; padding: 8px 20px; border: 1px solid #4f46e5; margin-top: 8px; }
+    textarea { flex: 1; background: transparent; border: none; color: white; font-family: inherit; font-size: 15px; resize: none; outline: none; padding: 8px 0; }
+    .icon-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: #c084fc; padding: 6px; border-radius: 50%; }
+    .icon-btn:hover { background: #4f46e5; color: white; }
+    .voice-mute { background: #334155; border-radius: 30px; padding: 6px 12px; font-size: 12px; }
+    .welcome-card { text-align: center; padding: 40px; background: rgba(30,41,59,0.6); border-radius: 32px; margin: 20px auto; max-width: 500px; }
+    .example-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+    .example-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 40px; cursor: pointer; font-size: 13px; }
+    .example-btn:hover { background: #4f46e5; }
+    .typing-indicator { display: inline-block; padding: 12px 18px; background: rgba(30,41,59,0.9); border-radius: 24px; border: 1px solid #4f46e5; }
+    .typing-indicator span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #c084fc; margin: 0 2px; animation: typing 1.4s infinite; }
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes typing { 0%,80%,100% { transform: scale(0.8); opacity: 0.5; } 40% { transform: scale(1.2); opacity: 1; } }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-content { background: #1e293b; border-radius: 24px; width: 80%; max-width: 800px; max-height: 80%; overflow: auto; padding: 20px; border: 1px solid #4f46e5; }
+    .modal-header { display: flex; justify-content: space-between; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid #334155; }
+    .modal-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+    .output-area { background: #0f172a; padding: 16px; border-radius: 16px; font-family: monospace; white-space: pre-wrap; font-size: 13px; color: #e2e8f0; }
+    @media (max-width: 800px) { .chat-sidebar { width: 80px; padding: 12px; } .history-item span:not(.delete-chat) { display: none; } .delete-chat { opacity: 1; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="chat-layout">
+    <div class="chat-sidebar">
+        <button class="new-chat-btn" id="newChatBtn">+ New Chat</button>
+        <select id="modelSelect"><option value="fast">Fast (Llama 3.1)</option><option value="powerful">Powerful (Llama 3.3)</option></select>
+        <select id="langSelect"><option value="English">English</option><option value="Spanish">Español</option><option value="French">Français</option><option value="German">Deutsch</option><option value="Hindi">हिन्दी</option><option value="Chinese">中文</option></select>
+        <button id="muteToggle" class="voice-mute">🔊 Auto-Speak ON</button>
+        <div class="history-list"><div style="font-size:12px; margin-bottom:8px;">📜 Previous Chats</div><div id="historyList"></div></div>
+    </div>
+    <div class="chat-main-area">
+        <div class="robot-container"><div class="robot-avatar" id="robotAvatar"><div class="robot-face" id="robotFace">🤖</div></div></div>
+        <div class="robot-status" id="robotStatus">🟢 Ready</div>
+        <div class="messages-area" id="messagesArea"><div id="chatMessages"></div></div>
+        <div class="input-wrapper">
+            <textarea id="userInput" placeholder="Ask QURA anything... (Enter to send)" rows="1"></textarea>
+            <button id="voiceBtn" class="icon-btn" title="Voice input">🎤</button>
+            <button id="sendBtn" class="icon-btn" title="Send">➤</button>
+        </div>
+        <div style="font-size:11px; text-align:center; margin-top:8px;">↵ Enter to send · Shift+Enter new line</div>
+    </div>
+</div>
+<div id="outputModal" class="modal"><div class="modal-content"><div class="modal-header"><strong>📤 Code Output</strong><button class="modal-close" onclick="closeModal()">&times;</button></div><div class="output-area" id="outputArea"></div></div></div>
+<script>
+    async function runCode(code, language) {
+        const modal = document.getElementById('outputModal');
+        const outputArea = document.getElementById('outputArea');
+        modal.style.display = 'flex';
+        outputArea.innerHTML = '<i>⏳ Running code...</i>';
+        try {
+            const res = await fetch('/api/run-code', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code, language: language })
+            });
+            const data = await res.json();
+            outputArea.innerHTML = data.output.replace(/\n/g, '<br>');
+        } catch (err) {
+            outputArea.innerHTML = `⚠️ Execution failed: ${err.message}`;
+        }
+    }
+    function closeModal() { document.getElementById('outputModal').style.display = 'none'; }
+    window.onclick = function(event) { const modal = document.getElementById('outputModal'); if (event.target === modal) modal.style.display = 'none'; };
+    let conversations = [], currentConvId = null, isWaiting = false, recognition = null, synth = window.speechSynthesis, autoSpeak = true, currentUtterance = null, availableVoices = [], isListening = false;
+    const chatMessagesDiv = document.getElementById('chatMessages'), userInput = document.getElementById('userInput'), sendBtn = document.getElementById('sendBtn'), voiceBtn = document.getElementById('voiceBtn'), newChatBtn = document.getElementById('newChatBtn'), modelSelect = document.getElementById('modelSelect'), langSelect = document.getElementById('langSelect'), muteToggle = document.getElementById('muteToggle'), historyListDiv = document.getElementById('historyList'), messagesArea = document.getElementById('messagesArea'), robotAvatar = document.getElementById('robotAvatar'), robotStatus = document.getElementById('robotStatus'), robotFace = document.getElementById('robotFace');
+    function startListening() { robotAvatar.classList.add('listening'); robotStatus.innerHTML = '🎤 Listening...'; robotFace.innerHTML = '🎧'; }
+    function stopListening() { robotAvatar.classList.remove('listening'); robotStatus.innerHTML = '🟢 Ready'; robotFace.innerHTML = '🤖'; }
+    function startThinking() { robotAvatar.classList.remove('listening'); robotAvatar.classList.add('speaking'); robotStatus.innerHTML = '🧠 Thinking...'; robotFace.innerHTML = '💭'; }
+    function stopThinking() { robotAvatar.classList.remove('speaking'); robotStatus.innerHTML = '🟢 Ready'; robotFace.innerHTML = '🤖'; }
+    function startSpeaking() { robotAvatar.classList.add('speaking'); robotStatus.innerHTML = '🔊 Speaking...'; robotFace.innerHTML = '🗣️'; }
+    function stopSpeaking() { robotAvatar.classList.remove('speaking'); robotStatus.innerHTML = '🟢 Ready'; robotFace.innerHTML = '🤖'; }
+    function loadVoices() { availableVoices = synth.getVoices(); }
+    if (synth) { synth.onvoiceschanged = loadVoices; setTimeout(loadVoices, 500); loadVoices(); }
+    function cleanTextForSpeech(text) { let cleaned = text.replace(/```[\s\S]*?```/g, '').replace(/`[^`]*`/g, '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\*([^*]+)\*/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/^[\s]*[-*•]\s+/gm, '').replace(/\n+/g, '. ').replace(/[^\w\s\u0900-\u097F\u00C0-\u024F\u1E00-\u1EFF.,!?;:]/g, '').replace(/\s+/g, ' '); return cleaned.trim(); }
+    function getVoiceForLanguage(langName) { const langMap = { 'English':'en-US','Spanish':'es-ES','French':'fr-FR','German':'de-DE','Hindi':'hi-IN','Chinese':'zh-CN' }; const targetLang = langMap[langName] || 'en-US'; const voices = availableVoices.length ? availableVoices : synth.getVoices(); let voice = voices.find(v => v.lang === targetLang); if (!voice && langName === 'Hindi') voice = voices.find(v => v.lang.startsWith('hi')); if (!voice) voice = voices.find(v => v.lang.startsWith(targetLang.split('-')[0])); return voice || voices[0]; }
+    function speakText(text, langName) { if (!synth || !autoSpeak) return; if (currentUtterance) synth.cancel(); const cleaned = cleanTextForSpeech(text); if (!cleaned) return; const utterance = new SpeechSynthesisUtterance(cleaned); const voice = getVoiceForLanguage(langName); if (voice) utterance.voice = voice; utterance.rate = 0.9; utterance.onstart = startSpeaking; utterance.onend = stopSpeaking; utterance.onerror = stopSpeaking; currentUtterance = utterance; synth.speak(utterance); }
+    function manualSpeak(text, langName) { if (!synth) return; if (currentUtterance) synth.cancel(); const cleaned = cleanTextForSpeech(text); if (!cleaned) return; const utterance = new SpeechSynthesisUtterance(cleaned); const voice = getVoiceForLanguage(langName); if (voice) utterance.voice = voice; utterance.rate = 0.9; utterance.onstart = startSpeaking; utterance.onend = stopSpeaking; currentUtterance = utterance; synth.speak(utterance); }
+    function initSpeechRecognition() { if (!('webkitSpeechRecognition' in window)) { robotStatus.innerHTML = '❌ Voice not supported'; return false; } const SpeechRecognition = window.webkitSpeechRecognition; recognition = new SpeechRecognition(); recognition.continuous = false; recognition.interimResults = false; recognition.onstart = () => { isListening = true; voiceBtn.classList.add('listening'); startListening(); }; recognition.onend = () => { isListening = false; voiceBtn.classList.remove('listening'); stopListening(); }; recognition.onresult = (event) => { const spoken = event.results[0][0].transcript; userInput.value = spoken; sendMessage(); }; recognition.onerror = (event) => { isListening = false; voiceBtn.classList.remove('listening'); stopListening(); if (event.error === 'not-allowed') { robotStatus.innerHTML = '❌ Microphone blocked. Click lock icon → Allow'; setTimeout(() => robotStatus.innerHTML = '🟢 Ready', 3000); } }; return true; }
+    voiceBtn.onclick = async () => { if (isListening) { recognition.stop(); return; } if (!recognition) initSpeechRecognition(); if (!recognition) { alert('Voice not supported'); return; } const lang = langSelect.value; recognition.lang = { 'Hindi':'hi-IN','Spanish':'es-ES','French':'fr-FR','German':'de-DE' }[lang] || 'en-US'; try { await navigator.mediaDevices.getUserMedia({ audio: true }); recognition.start(); } catch(e) { robotStatus.innerHTML = '🎤 Click allow microphone'; } };
+    muteToggle.onclick = () => { autoSpeak = !autoSpeak; muteToggle.textContent = autoSpeak ? '🔊 Auto-Speak ON' : '🔇 Auto-Speak OFF'; if (currentUtterance) synth.cancel(); };
+    function loadConversations() { const stored = localStorage.getItem('qura_conversations'); if (stored) conversations = JSON.parse(stored); else conversations = [{ id: Date.now().toString(), title: "New Chat", messages: [], createdAt: new Date().toISOString() }]; if (!conversations.length) conversations.push({ id: Date.now().toString(), title: "New Chat", messages: [], createdAt: new Date().toISOString() }); currentConvId = conversations[0].id; saveConversations(); }
+    function saveConversations() { localStorage.setItem('qura_conversations', JSON.stringify(conversations)); }
+    function addMessage(role, content) { const conv = conversations.find(c => c.id === currentConvId); if (conv) { conv.messages.push({ role, content, timestamp: new Date().toISOString() }); if (role === 'user' && conv.messages.filter(m => m.role === 'user').length === 1 && conv.title === "New Chat") { conv.title = content.length > 30 ? content.substring(0,30)+'...' : content; } saveConversations(); renderHistoryList(); } }
+    function deleteChat(convId, e) { e.stopPropagation(); if (conversations.length === 1) { alert('Cannot delete last chat'); return; } if (confirm('Delete this chat?')) { conversations = conversations.filter(c => c.id !== convId); if (currentConvId === convId) currentConvId = conversations[0].id; saveConversations(); renderCurrentChat(); renderHistoryList(); } }
+    function newChat() { const newId = Date.now().toString(); conversations.unshift({ id: newId, title: "New Chat", messages: [], createdAt: new Date().toISOString() }); currentConvId = newId; saveConversations(); renderCurrentChat(); renderHistoryList(); }
+    function renderMessage(role, content) { const div = document.createElement('div'); div.className = `message ${role}`; const bubble = document.createElement('div'); bubble.className = 'bubble'; let formatted = content; formatted = formatted.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => { const language = lang || 'plaintext'; const escapedCode = escapeHtml(code); const wrapper = document.createElement('div'); wrapper.className = 'code-block-wrapper'; wrapper.innerHTML = `<div class="code-header"><span>${language}</span><div class="code-actions"><button class="copy-code-btn">📋 Copy</button><button class="run-code-btn">▶️ Run</button></div></div><pre><code class="language-${language}">${escapedCode}</code></pre>`; setTimeout(() => { const copyBtn = wrapper.querySelector('.copy-code-btn'); const runBtn = wrapper.querySelector('.run-code-btn'); copyBtn.onclick = () => { navigator.clipboard.writeText(code); copyBtn.textContent = '✓ Copied!'; setTimeout(() => copyBtn.textContent = '📋 Copy', 1500); }; runBtn.onclick = () => runCode(code, language); }, 0); return wrapper.outerHTML; }); formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>'); formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>'); formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>'); formatted = formatted.replace(/\n/g, '<br>'); bubble.innerHTML = formatted; div.appendChild(bubble); if (role === 'assistant') { const speakBtn = document.createElement('button'); speakBtn.className = 'speak-btn'; speakBtn.innerHTML = '🔊'; speakBtn.onclick = () => manualSpeak(content, langSelect.value); div.appendChild(speakBtn); } chatMessagesDiv.appendChild(div); document.querySelectorAll('pre code').forEach(block => hljs.highlightElement(block)); }
+    function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+    function showTyping() { const typing = document.createElement('div'); typing.id = 'typingIndicator'; typing.className = 'message assistant'; typing.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`; chatMessagesDiv.appendChild(typing); scrollToBottom(); }
+    function removeTyping() { document.getElementById('typingIndicator')?.remove(); }
+    function renderCurrentChat() { chatMessagesDiv.innerHTML = ''; const conv = conversations.find(c => c.id === currentConvId); if (!conv) return; if (conv.messages.length === 0) { const welcome = document.createElement('div'); welcome.className = 'welcome-card'; welcome.innerHTML = `<h2>🤖 How can I help you today?</h2><p>I speak multiple languages, write code, and read answers aloud.</p><div class="example-grid"><button class="example-btn">Explain quantum computing</button><button class="example-btn">Write a Python function</button><button class="example-btn">Tell me a joke in Spanish</button><button class="example-btn">Design a database schema</button></div>`; chatMessagesDiv.appendChild(welcome); attachExampleListeners(); } else { conv.messages.forEach(m => renderMessage(m.role, m.content)); } scrollToBottom(); }
+    function renderHistoryList() { historyListDiv.innerHTML = ''; [...conversations].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).forEach(conv => { const item = document.createElement('div'); item.className = 'history-item' + (conv.id===currentConvId ? ' active' : ''); const span = document.createElement('span'); span.textContent = conv.title; span.style.flex = '1'; const del = document.createElement('button'); del.innerHTML = '🗑️'; del.className = 'delete-chat'; del.onclick = (e) => deleteChat(conv.id, e); item.appendChild(span); item.appendChild(del); item.onclick = (e) => { if(e.target !== del) { currentConvId = conv.id; renderCurrentChat(); renderHistoryList(); } }; historyListDiv.appendChild(item); }); }
+    function scrollToBottom() { setTimeout(() => messagesArea.scrollTop = messagesArea.scrollHeight, 100); }
+    function attachExampleListeners() { document.querySelectorAll('.example-btn').forEach(btn => { btn.onclick = () => { userInput.value = btn.innerText; sendMessage(); }; }); }
+    async function sendMessage() { const msg = userInput.value.trim(); if (!msg || isWaiting) return; userInput.value = ''; isWaiting = true; const welcomeCard = document.querySelector('.welcome-card'); if (welcomeCard) welcomeCard.remove(); renderMessage('user', msg); addMessage('user', msg); showTyping(); startThinking(); try { const res = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, model: modelSelect.value, language: langSelect.value }) }); const data = await res.json(); removeTyping(); stopThinking(); if (data.error) { renderMessage('assistant', `⚠️ ${data.error}`); addMessage('assistant', `⚠️ ${data.error}`); } else { renderMessage('assistant', data.response); addMessage('assistant', data.response); speakText(data.response, langSelect.value); } } catch (err) { removeTyping(); stopThinking(); renderMessage('assistant', `🔌 Error: ${err.message}`); addMessage('assistant', `🔌 Error: ${err.message}`); } finally { isWaiting = false; scrollToBottom(); } }
+    userInput.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120)+'px'; });
+    userInput.addEventListener('keydown', (e) => { if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+    sendBtn.onclick = sendMessage; newChatBtn.onclick = newChat;
+    initSpeechRecognition(); loadConversations(); renderCurrentChat(); renderHistoryList();
+    document.body.addEventListener('click', async () => { try { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); stream.getTracks().forEach(t => t.stop()); robotStatus.innerHTML = '🎤 Microphone ready!'; setTimeout(() => robotStatus.innerHTML = '🟢 Ready', 2000); } catch(e) {} }, { once: true });
+</script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+{% endblock %}
